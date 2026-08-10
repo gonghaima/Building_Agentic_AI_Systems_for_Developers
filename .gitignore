@@ -51,5 +51,3 @@ pnpm-debug.log*
 .chroma/
 *.faiss
 Ex_Files_Build_Agents_LangChain.zip
-
-Exercise Files

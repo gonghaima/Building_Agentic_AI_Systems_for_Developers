@@ -1,0 +1,13 @@
+Name,Email,Company,Title,Phone,Location,Timezone,Status,Last_Contact,Notes,Industry,Revenue_Potential
+Sarah Chen,sarah.chen@techflow.com,TechFlow Solutions,VP Engineering,(555) 234-5678,San Francisco CA,America/Los_Angeles,NEEDS_CONTACTING,2024-11-15,Interested in automation tools for dev teams,Technology,85000
+Marcus Rodriguez,m.rodriguez@globalretail.co,Global Retail Corp,IT Director,(555) 345-6789,New York NY,America/New_York,NEEDS_CONTACTING,2024-10-22,Looking to streamline inventory management,Retail,120000
+Priya Patel,priya.patel@financeplus.in,FinancePlus,CTO,(91) 9876543210,Mumbai India,Asia/Kolkata,NEEDS_CONTACTING,2024-12-01,Needs compliance automation solution,Finance,200000
+James Thompson,james.t@manufacturing.au,Thompson Manufacturing,Operations Manager,(61) 4 1234 5678,Sydney Australia,Australia/Sydney,NEEDS_CONTACTING,2024-11-28,Wants to digitize production workflows,Manufacturing,150000
+Elena Kowalski,elena.k@healthtech.de,HealthTech Berlin,Head of Digital,(49) 30 12345678,Berlin Germany,Europe/Berlin,NEEDS_CONTACTING,2024-12-03,Exploring patient data management tools,Healthcare,180000
+David Kim,d.kim@startup.kr,Seoul Innovations,Founder,(82) 10 1234 5678,Seoul South Korea,Asia/Seoul,NEEDS_CONTACTING,2024-11-20,Early stage startup needing growth tools,Technology,75000
+Maria Santos,maria.santos@energia.br,Energia Verde,Project Director,(55) 11 98765-4321,São Paulo Brazil,America/Sao_Paulo,NEEDS_CONTACTING,2024-12-05,Interested in sustainability tracking,Energy,130000
+Ahmed Hassan,ahmed.hassan@logistics.ae,Dubai Logistics Hub,Supply Chain VP,(971) 50 123 4567,Dubai UAE,Asia/Dubai,NEEDS_CONTACTING,2024-11-25,Needs automated shipping coordination,Logistics,160000
+Jennifer Wilson,j.wilson@foodchain.ca,Northern Food Chain,COO,(1) 416-555-0123,Toronto Canada,America/Toronto,NEEDS_CONTACTING,2024-12-02,Looking for supply chain optimization,Food & Beverage,95000
+Hiroshi Tanaka,h.tanaka@robotics.jp,Tokyo Robotics,R&D Manager,(81) 3 1234 5678,Tokyo Japan,Asia/Tokyo,NEEDS_CONTACTING,2024-11-30,Interested in AI-driven automation,Robotics,220000
+Lisa Anderson,lisa.a@realestate.us,Metro Properties,Technology Lead,(555) 456-7890,Chicago IL,America/Chicago,CONTACTED,2024-12-08,Follow-up scheduled for next week,Real Estate,110000
+Carlos Mendez,carlos.m@automotive.mx,AutoMex Solutions,Engineering Director,(52) 55 1234 5678,Mexico City Mexico,America/Mexico_City,NEEDS_CONTACTING,2024-11-18,Exploring factory automation options,Automotive,175000
