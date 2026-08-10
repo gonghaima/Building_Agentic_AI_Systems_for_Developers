@@ -1,0 +1,302 @@
+{
+  "provider": "autogen_agentchat.teams.SelectorGroupChat",
+  "component_type": "team",
+  "version": 1,
+  "component_version": 1,
+  "description": "An agentic workflow where a Planner dynamically determines if human intervention is needed based on customer value and sentiment.",
+  "label": "Feedback Classifier with Planner Orchestration and Human in the Loop",
+  "config": {
+    "participants": [
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Analyzes customer feedback text to determine sentiment, category, and customer tier.\n",
+        "label": "Classifier Agent",
+        "config": {
+          "name": "classifier_agent",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "OpenAI GPT-5 Mini (faster, cost-efficient)",
+            "label": "OpenAI GPT-5 Mini",
+            "config": {
+              "model": "gpt-5-mini",
+              "api_key": "REDACTED_OPENAI_API_KEY",
+              "base_url": "https://api.openai.com/v1",
+              "model_info": {
+                "vision": true,
+                "function_calling": true,
+                "json_output": true,
+                "family": "gpt",
+                "structured_output": true
+              }
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Analyze the user's feedback and output a single JSON object.\nInclude the following fields:\n- `category`: (string) Select one from: \"UI/UX\", \"Performance\", \"Pricing\", \"Feature Request\", \"Support\", or \"General\".\n- `sentiment`: (string) \"Positive\", \"Negative\", or \"Neutral\".\n- `confidence`: (float) A value between 0.0 and 1.0.\n- `customer_tier`: Infer the tier from context (e.g., \"Gold\", \"Platinum\", \"VIP\", \"Standard\"). If not stated, use \"Unknown\".\n- `review_required`: (boolean) Set to `true` if the sentiment is negative, otherwise `false`.\n\nOutput ONLY the JSON.",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Handles external actions like saving structured analysis data to the CRM system.",
+        "label": "Executor Agent",
+        "config": {
+          "name": "executor_agent",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "OpenAI GPT-5 Mini (faster, cost-efficient)",
+            "label": "OpenAI GPT-5 Mini",
+            "config": {
+              "model": "gpt-5-mini",
+              "api_key": "REDACTED_OPENAI_API_KEY",
+              "base_url": "https://api.openai.com/v1",
+              "model_info": {
+                "vision": true,
+                "function_calling": true,
+                "json_output": true,
+                "family": "gpt",
+                "structured_output": true
+              }
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "New Tool",
+                  "config": {
+                    "source_code": "import json\n\ndef save_to_crm(feedback_text: str, sentiment: str, category: str, customer_tier: str, human_notes: str = \"N/A\"):\n    log_entry = {\n        \"text\": feedback_text,\n        \"sentiment\": sentiment,\n        \"category\": category,\n        \"customer_tier\": customer_tier\n, \"human_notes\": human_notes\n    }\n    try:\n        with open(\"crm_demo_log.txt\", \"a\") as f:\n            f.write(json.dumps(log_entry) + \"\\n\")\n        return f\"Log entry created successfully: {json.dumps(log_entry)}\"\n    except Exception as e:\n        return f\"Failed to write to CRM log: {str(e)}\"",
+                    "name": "save_to_crm",
+                    "description": "Description of the new function",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "an agent that critiques and improves the assistant's output",
+          "system_message": "You are the executor agent. Call `save_to_crm` using data from the conversation history.\n\nMapping:\n- `feedback_text`: Original user message\n- `classification_result`: The Analyst's JSON output\n- `human_notes`: The Human Supervisor's message. If the Human Supervisor did not speak in this conversation, set this to \"N/A\".\n\nAfter successfully saving, you MUST respond with:\nCRM updated successfully. TERMINATE",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "You are the Workflow Strategist. Your goal is to protect the brand by ensuring high-value or angry customers get human attention.\n",
+        "label": "Workflow Strategist",
+        "config": {
+          "name": "workflow_strategist",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "OpenAI GPT-5 Mini (faster, cost-efficient)",
+            "label": "OpenAI GPT-5 Mini",
+            "config": {
+              "model": "gpt-5-mini",
+              "api_key": "REDACTED_OPENAI_API_KEY",
+              "base_url": "https://api.openai.com/v1",
+              "model_info": {
+                "vision": true,
+                "function_calling": true,
+                "json_output": true,
+                "family": "gpt",
+                "structured_output": true
+              }
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "Analyze the user's message and output a JSON plan using the new agent names.\n\n**DECISION LOGIC:**\n1. **High-Touch Path:** If the customer implies they are High Value (e.g., VIP, Gold, Platinum, Long-term) OR if the feedback is severe:\n   -> You MUST plan for human intervention.\n   -> Plan: [\"classifier_agent\", \"human_supervisor\", \"executor_agent\"]\n\n2. **Standard Path:** For routine feedback:\n   -> Automate the process.\n   -> Plan: [\"classifier_agent\", \"executor_agent\"]\n\nOutput ONLY the JSON object: {\"plan\": [...] }",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.UserProxyAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "An agent that can represent a human user through an input function.",
+        "label": "Human Supervisor",
+        "config": {
+          "name": "human_supervisor",
+          "description": "a human user that should be consulted only when the assistant_agent is unable to verify the information provided by the websurfer_agent"
+        }
+      }
+    ],
+    "model_client": {
+      "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+      "component_type": "model",
+      "version": 1,
+      "component_version": 1,
+      "description": "OpenAI GPT-5 Mini (faster, cost-efficient)",
+      "label": "OpenAI GPT-5 Mini",
+      "config": {
+        "model": "gpt-5-mini",
+        "api_key": "REDACTED_OPENAI_API_KEY",
+        "base_url": "https://api.openai.com/v1",
+        "model_info": {
+          "vision": true,
+          "function_calling": true,
+          "json_output": true,
+          "family": "gpt",
+          "structured_output": true
+        }
+      }
+    },
+    "termination_condition": {
+      "provider": "autogen_agentchat.base.OrTerminationCondition",
+      "component_type": "termination",
+      "version": 1,
+      "component_version": 1,
+      "label": "OrTerminationCondition",
+      "config": {
+        "conditions": [
+          {
+            "provider": "autogen_agentchat.conditions.TextMentionTermination",
+            "component_type": "termination",
+            "version": 1,
+            "component_version": 1,
+            "description": "Terminate the conversation if a specific text is mentioned.",
+            "label": "TextMentionTermination",
+            "config": {
+              "text": "TERMINATE"
+            }
+          },
+          {
+            "provider": "autogen_agentchat.conditions.MaxMessageTermination",
+            "component_type": "termination",
+            "version": 1,
+            "component_version": 1,
+            "description": "Terminate the conversation after a maximum number of messages have been exchanged.",
+            "label": "MaxMessageTermination",
+            "config": {
+              "max_messages": 10,
+              "include_agent_event": false
+            }
+          }
+        ]
+      }
+    },
+    "selector_prompt": "An agentic workflow where a Planner dynamically determines if human intervention is needed based on customer value and sentiment.\n\nSelect the next agent by identifying who just spoke and following these rules.\n\nHistory:\n{history}\n\n**SELECTION RULES:**\n1. **Start:** If the last message is from the **User** (Customer), select `workflow_strategist`.\n2. **Plan:** If `workflow_strategist` just spoke, select `classifier_agent`.\n3. **Decision:** If `classifier_agent` just spoke, READ the `workflow_strategist`'s plan:\n   - If the plan includes `human_supervisor`, select `human_supervisor`.\n   - Otherwise, select `executor_agent`.\n   - **DO NOT** select `classifier_agent` again.\n4. **Handover:** If `human_supervisor` just spoke, select `executor_agent`.\n5. **Finish:** If `executor_agent` just spoke (or tool result), select `executor_agent` (to terminate).\n\nReturn ONLY the agent name.\n",
+    "allow_repeated_speaker": true,
+    "max_selector_attempts": 3,
+    "emit_team_events": false,
+    "model_client_streaming": false
+  }
+}

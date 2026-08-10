@@ -1,0 +1,20 @@
+{
+  "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+  "component_type": "model",
+  "version": 1,
+  "component_version": 1,
+  "description": "Default Model - OpenAI GPT-5 Mini (faster, cost-efficient)",
+  "label": "Defaut Model - OpenAI GPT-5 Mini",
+  "config": {
+    "model": "gpt-5-mini",
+    "api_key": "",
+    "base_url": "https://api.openai.com/v1",
+    "model_info": {
+      "vision": true,
+      "function_calling": true,
+      "json_output": true,
+      "family": "gpt",
+      "structured_output": true
+    }
+  }
+}

@@ -1,0 +1,217 @@
+{
+  "provider": "autogen_agentchat.teams.SelectorGroupChat",
+  "component_type": "team",
+  "version": 1,
+  "component_version": 1,
+  "description": "A team with 2 agents - a Classifier Agent and a ExecutorAgent (with a save_to_crm tool) in a SelectorGroupChat team.\n",
+  "label": "Feedback Classifier",
+  "config": {
+    "participants": [
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Analyzes customer feedback text to determine sentiment, category, and customer tier.\n",
+        "label": "Classifier Agent",
+        "config": {
+          "name": "classifier_agent",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "OpenAI GPT-5 Mini (faster, cost-efficient)",
+            "label": "OpenAI GPT-5 Mini",
+            "config": {
+              "model": "gpt-5-mini",
+              "api_key": "REDACTED_OPENAI_API_KEY",
+              "base_url": "https://api.openai.com/v1",
+              "model_info": {
+                "vision": true,
+                "function_calling": true,
+                "json_output": true,
+                "family": "gpt",
+                "structured_output": true
+              }
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "FunctionTool",
+                  "config": {
+                    "source_code": "def calculator(a: float, b: float, operator: str) -> str:\n    try:\n        if operator == \"+\":\n            return str(a + b)\n        elif operator == \"-\":\n            return str(a - b)\n        elif operator == \"*\":\n            return str(a * b)\n        elif operator == \"/\":\n            if b == 0:\n                return \"Error: Division by zero\"\n            return str(a / b)\n        else:\n            return \"Error: Invalid operator. Please use +, -, *, or /\"\n    except Exception as e:\n        return f\"Error: {str(e)}\"\n",
+                    "name": "calculator",
+                    "description": "A simple calculator that performs basic arithmetic operations",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "An agent that provides assistance with ability to use tools.",
+          "system_message": "You are the Classifier. Your job is to analyze the user's message for sentiment and category.\n\nYour output MUST be a single raw JSON object. \n\nInclude the following fields:\n- `category`: (string) Select one from: \"UI/UX\", \"Performance\", \"Pricing\", \"Feature Request\", \"Support\", or \"General\".\n- `sentiment`: (string) \"Positive\", \"Negative\", or \"Neutral\".\n- `confidence`: (float) A value between 0.0 and 1.0.\n- `customer_tier`: (string) Default to \"Unknown\".\n- `review_required`: (boolean) Set to `true` if the sentiment is negative, otherwise `false`.",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      },
+      {
+        "provider": "autogen_agentchat.agents.AssistantAgent",
+        "component_type": "agent",
+        "version": 1,
+        "component_version": 1,
+        "description": "Handles external actions like saving structured analysis data to the CRM system.",
+        "label": "Executor Agent",
+        "config": {
+          "name": "executor_agent",
+          "model_client": {
+            "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+            "component_type": "model",
+            "version": 1,
+            "component_version": 1,
+            "description": "OpenAI GPT-5 Mini (faster, cost-efficient)",
+            "label": "OpenAI GPT-5 Mini",
+            "config": {
+              "model": "gpt-5-mini",
+              "api_key": "REDACTED_OPENAI_API_KEY",
+              "base_url": "https://api.openai.com/v1",
+              "model_info": {
+                "vision": true,
+                "function_calling": true,
+                "json_output": true,
+                "family": "gpt",
+                "structured_output": true
+              }
+            }
+          },
+          "workbench": {
+            "provider": "autogen_core.tools.StaticWorkbench",
+            "component_type": "workbench",
+            "version": 1,
+            "component_version": 1,
+            "description": "A workbench that provides a static set of tools that do not change after\neach tool execution.",
+            "label": "StaticWorkbench",
+            "config": {
+              "tools": [
+                {
+                  "provider": "autogen_core.tools.FunctionTool",
+                  "component_type": "tool",
+                  "version": 1,
+                  "component_version": 1,
+                  "description": "Create custom tools by wrapping standard Python functions.",
+                  "label": "New Tool",
+                  "config": {
+                    "source_code": "import json\n\ndef save_to_crm(feedback_text: str, sentiment: str, category: str, customer_tier: str):\n    log_entry = {\n        \"text\": feedback_text,\n        \"sentiment\": sentiment,\n        \"category\": category,\n        \"customer_tier\": customer_tier\n    }\n    try:\n        with open(\"crm_demo_log.txt\", \"a\") as f:\n            f.write(json.dumps(log_entry) + \"\\n\")\n        return f\"Log entry created successfully: {json.dumps(log_entry)}\"\n    except Exception as e:\n        return f\"Failed to write to CRM log: {str(e)}\"",
+                    "name": "save_to_crm",
+                    "description": "Description of the new function",
+                    "global_imports": [],
+                    "has_cancellation_support": false
+                  }
+                }
+              ]
+            }
+          },
+          "model_context": {
+            "provider": "autogen_core.model_context.UnboundedChatCompletionContext",
+            "component_type": "chat_completion_context",
+            "version": 1,
+            "component_version": 1,
+            "description": "An unbounded chat completion context that keeps a view of the all the messages.",
+            "label": "UnboundedChatCompletionContext",
+            "config": {}
+          },
+          "description": "an agent that critiques and improves the assistant's output",
+          "system_message": "You are the Executor. Your task is to save feedback and its analysis to the CRM.\n\nStep 1: If the previous message is a JSON analysis from the Classifier, you MUST call the `save_to_crm` tool using that data.\n\nStep 2: If the previous message is the tool result (e.g., \"Log entry created successfully...\"), you MUST reply with exactly: TERMINATE\n",
+          "model_client_stream": false,
+          "reflect_on_tool_use": false,
+          "tool_call_summary_format": "{result}",
+          "metadata": {}
+        }
+      }
+    ],
+    "model_client": {
+      "provider": "autogen_ext.models.openai.OpenAIChatCompletionClient",
+      "component_type": "model",
+      "version": 1,
+      "component_version": 1,
+      "description": "OpenAI GPT-5 Mini (faster, cost-efficient)",
+      "label": "OpenAI GPT-5 Mini",
+      "config": {
+        "model": "gpt-5-mini",
+        "api_key": "REDACTED_OPENAI_API_KEY",
+        "base_url": "https://api.openai.com/v1",
+        "model_info": {
+          "vision": true,
+          "function_calling": true,
+          "json_output": true,
+          "family": "gpt",
+          "structured_output": true
+        }
+      }
+    },
+    "termination_condition": {
+      "provider": "autogen_agentchat.base.OrTerminationCondition",
+      "component_type": "termination",
+      "version": 1,
+      "component_version": 1,
+      "label": "OrTerminationCondition",
+      "config": {
+        "conditions": [
+          {
+            "provider": "autogen_agentchat.conditions.TextMentionTermination",
+            "component_type": "termination",
+            "version": 1,
+            "component_version": 1,
+            "description": "Terminate the conversation if a specific text is mentioned.",
+            "label": "TextMentionTermination",
+            "config": {
+              "text": "TERMINATE"
+            }
+          },
+          {
+            "provider": "autogen_agentchat.conditions.MaxMessageTermination",
+            "component_type": "termination",
+            "version": 1,
+            "component_version": 1,
+            "description": "Terminate the conversation after a maximum number of messages have been exchanged.",
+            "label": "MaxMessageTermination",
+            "config": {
+              "max_messages": 10,
+              "include_agent_event": false
+            }
+          }
+        ]
+      }
+    },
+    "selector_prompt": "You are in a role play game. The following roles are available:\n{roles}.\nRead the following conversation. Then select the next role from {participants} to play. Only return the role.\n\n**RULES:**\n1. If the last message was from the 'user', you MUST select 'classifier_agent'.\n2. If the last message was a JSON output from 'classifier_agent', you MUST select 'executor_agent'.\n3. If the last message was a tool result (e.g., \"Log entry created successfully.\"), you MUST select 'executor_agent' again so it can finish its task and terminate.\n\n{history}\n\nRead the above conversation. Then select the next role from {participants} to play. Only return the role.\n",
+    "allow_repeated_speaker": true,
+    "max_selector_attempts": 3,
+    "emit_team_events": false,
+    "model_client_streaming": false
+  }
+}

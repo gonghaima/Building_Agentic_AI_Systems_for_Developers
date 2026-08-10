@@ -1,0 +1,12 @@
+{"text": "The app crashes every time I try to export a PDF. Very frustrating, I pay for premium!", "sentiment": "Negative", "category": "Performance", "customer_tier": "Premium"}
+{"text": "It looks like the sentiment and category were already extracted!", "sentiment": "Negative", "category": "Performance", "customer_tier": "Premium"}
+{"text": "The new log entry is not a customer complaint, so no review is required.", "sentiment": "Neutral", "category": "General", "customer_tier": "Unknown"}
+{"text": "This log entry confirms the output from before.", "sentiment": "Neutral", "category": "General", "customer_tier": "Unknown"}
+{"text": "The app crashes every time I try to export a PDF. Very frustrating, I pay for premium!", "sentiment": "Negative", "category": "Performance", "customer_tier": "Premium"}
+{"text": "The dashboard keeps crashing. Please fix this ASAP!", "sentiment": "Negative", "category": "Performance", "customer_tier": "Unknown"}
+{"text": "The dashboard keeps crashing. Please fix this ASAP!", "sentiment": "Negative", "category": "Performance", "customer_tier": "Unknown"}
+{"text": "The dashboard keeps crashing. Please fix this ASAP!", "sentiment": "Negative", "category": "Performance", "customer_tier": "Unknown"}
+{"text": "The dashboard keeps crashing. Please fix this ASAP!", "sentiment": "Negative", "category": "Performance", "customer_tier": "Unknown"}
+{"text": "The dark mode toggle in settings is a bit hard to find. Minor nit, otherwise loving the app.", "sentiment": "minor_issue", "category": "app", "customer_tier": "N/A", "human_notes": "N/A"}
+{"text": "I am a Platinum Enterprise customer, and my dashboard has been down for four hours. This is unacceptable. Breach of our SLA. Fix it now.", "sentiment": "Negative", "category": "Performance", "customer_tier": "Platinum", "human_notes": "N/A"}
+{"text": "I am a Platinum Enterprise customer, and my dashboard has been down for four hours. This is unacceptable. Breach of our SLA. Fix it now.", "sentiment": "negative", "category": "technical issues", "customer_tier": "Platinum Enterprise", "human_notes": "N/A"}
