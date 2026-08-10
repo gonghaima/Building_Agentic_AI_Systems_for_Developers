@@ -1,0 +1,36 @@
+# ipykernel  # Needed for the Jupyter notebooks used
+openai     # Needed for the embedding and LLM calls
+anthropic  # Needed for the chunking and LLM calls
+cohere      # Needed for reranking exercise
+numpy      # Needed for speeding up mathematical calculations
+scikit-learn    # Needed for the cosine distance calculations
+python-dotenv # To handle secrets such as API keys
+# open-webui # To provide simple UI to interact with the LLM models
+qdrant-client # Local vector database
+einops # To load Transformer models
+sentence-transformers # sentence parsing and embedding 
+# sentence-transformers-impl # For the community models
+semantic-router==0.0.37 # For semantic chunking
+semantic-router[processing] # For semantic chunking plots
+semantic-chunkers
+datasets==2.19.0 # Loading datasets for semantic chunking
+altair
+seaborn
+tabulate
+matplotlib
+vegafusion-python-embed>=1.5.0  # For large dataset (TNSE output) for Altair
+vegafusion>=1.5.0               # For large dataset (TNSE output) for Altair
+vl-convert-python>=1.6.0        # For large dataset (TNSE output) for Altair
+# nbformat
+# ipywidgets
+# For the multi-modal notebook
+colpali_engine>=0.3.1 
+huggingface_hub[hf_transfer] 
+transformers>=4.45.0 
+stamina 
+rich
+rich-theme-manager
+bm25s # For Hybrid Search
+PyStemmer # for BM25 Hybrid Search
+pdf2image # for multi modal demo
+pymupdf4llm # For PDF exercise
