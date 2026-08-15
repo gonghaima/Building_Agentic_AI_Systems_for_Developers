@@ -1,35 +1,31 @@
 /**
  * Baseline: Basic Chat with History
- * 
- * Focus: Simple chat interface using OpenAI Responses API
- * Docs: https://platform.openai.com/docs/api-reference/responses/create
- * 
+ *
+ * Focus: Simple chat interface using a local model served by Ollama
+ * Docs: https://github.com/ollama/ollama/blob/main/docs/openai.md
+ *
  * This baseline lesson demonstrates:
  * - Basic message history management
- * - Simple request/response flow
+ * - Simple request/response flow via Ollama's OpenAI-compatible Chat Completions endpoint
  * - No function calling yet - just plain chat
  */
 
 import { useState } from 'react'
 import OpenAI from 'openai'
-import { ApiKeyConfig } from '@/components/ApiKeyConfig'
 import { ChatArea } from '@/components/ChatArea'
 import { PageLayout } from '@/components/PageLayout'
 import { InspectorPanels } from '@/components/InspectorPanels'
 import { useTrace } from '@/hooks/useTrace'
 import type { Message } from '@/types/chat'
 
+const MODEL = 'llama3.1:8b'
+
 export default function BaselineResponses() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const { traceSteps, trace, clearTrace } = useTrace()
-  const [apiKey, setApiKey] = useState<string | null>(
-    import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('openai_api_key') || null
-  )
 
   async function handleSend(input: string) {
-    if (!apiKey) return
-
     setIsLoading(true)
 
     try {
@@ -40,32 +36,33 @@ export default function BaselineResponses() {
       const newMessages = [...messages, userMessage]
       setMessages(newMessages)
 
-      // Initialize OpenAI client with API key
+      // Initialize OpenAI client pointed at the local Ollama server
       const client = new OpenAI({
-        apiKey: apiKey,
+        baseURL: 'http://127.0.0.1:11434/v1',
+        apiKey: 'ollama', // Ollama ignores the key, but the SDK requires one
         dangerouslyAllowBrowser: true, // Note: In production, use a backend proxy
       })
 
-      const done = trace('request', 'Sending request to model', { model: 'gpt-5', messageCount: newMessages.length })
+      const done = trace('request', 'Sending request to model', { model: MODEL, messageCount: newMessages.length })
 
-      // Call OpenAI Responses API
-      // See: https://platform.openai.com/docs/api-reference/responses/create
-      const response = await client.responses.create({
-        model: 'gpt-5',
-        input: newMessages.map((msg) => ({
+      // Call Ollama's OpenAI-compatible Chat Completions endpoint
+      // See: https://github.com/ollama/ollama/blob/main/docs/openai.md
+      const completion = await client.chat.completions.create({
+        model: MODEL,
+        messages: newMessages.map((msg) => ({
           role: msg.role as 'user' | 'assistant',
           content: msg.content,
         })),
       })
 
-      done('Response received', response.output)
+      done('Response received', completion.choices)
 
       // Extract assistant response and store full response object
       const assistantMessage: Message = {
         role: 'assistant',
-        content: response.output_text || 'No response',
-        responseOutput: response.output,
-        rawResponse: response, // Store full response for inspection panel
+        content: completion.choices[0].message.content || 'No response',
+        responseOutput: completion.choices,
+        rawResponse: completion, // Store full response for inspection panel
       }
 
       setMessages([...newMessages, assistantMessage])
@@ -86,15 +83,6 @@ export default function BaselineResponses() {
   function handleClear() {
     setMessages([])
     clearTrace()
-  }
-
-  if (!apiKey) {
-    return (
-      <div className="container mx-auto max-w-2xl py-8 px-4">
-        <h1 className="text-2xl font-bold mb-4">Basic Chat (Responses API)</h1>
-        <ApiKeyConfig onKeyValidated={setApiKey} />
-      </div>
-    )
   }
 
   // Get the latest assistant message with response data

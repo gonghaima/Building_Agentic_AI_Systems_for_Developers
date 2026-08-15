@@ -1,61 +1,97 @@
 /**
- * Lesson 04: Using Built-in Tools — Web Search
+ * Lesson 04: Web Search via a Local Function Tool
  *
- * Focus: Using the built-in web_search tool with the OpenAI Responses API
- * Docs: https://platform.openai.com/docs/guides/tools-web-search
- * API Reference: https://platform.openai.com/docs/api-reference/responses/create
+ * Focus: Giving a local model web-search ability through function calling
+ * Docs: https://github.com/ollama/ollama/blob/main/docs/openai.md#tools
+ *
+ * The original version of this lesson used OpenAI's built-in `web_search`
+ * tool, which runs server-side on OpenAI's infrastructure — there is no
+ * local/Ollama equivalent for that. Instead, we define `search_wikipedia`
+ * as a regular function tool (same pattern as Lessons 01-03) and execute
+ * it ourselves against Wikipedia's free, keyless search API — matching
+ * the original lesson's `wikipedia.org`-only domain filter.
  *
  * This lesson demonstrates:
- * - Adding the web_search built-in tool to a Responses API request
- * - Domain filtering to restrict search results to wikipedia.org
- * - Key difference from function calling: the model runs the tool
- *   server-side — no back-and-forth loop is required
- *
- * Unlike regular function calls (Lessons 01-03), built-in tools like
- * web_search are executed by the model automatically. We simply include
- * the tool in the request and receive the final response directly.
- * See: https://platform.openai.com/docs/guides/tools-web-search
+ * - Wrapping a real web search API as a function tool
+ * - The same request → tool call → execute → follow-up loop as Lessons 01-03,
+ *   just applied to search instead of a calculator or geocoder
  */
 
 import { useState } from 'react'
 import OpenAI from 'openai'
-import { ApiKeyConfig } from '@/components/ApiKeyConfig'
 import { ChatArea } from '@/components/ChatArea'
 import { PageLayout } from '@/components/PageLayout'
 import { InspectorPanels } from '@/components/InspectorPanels'
 import { useTrace } from '@/hooks/useTrace'
 import type { Message } from '@/types/chat'
 
+const MODEL = 'llama3.1:8b'
+
+const SYSTEM_PROMPT =
+  'Use the search_wikipedia tool only when the user asks about general knowledge or current events. ' +
+  'For casual conversation or opinions, respond without searching.'
+
 /**
- * Define the web search tool with domain filtering.
- * See: https://platform.openai.com/docs/guides/tools-web-search#domain-filtering
- *
- * Domain filtering lets you limit results to a specific set of domains
- * using the `filters` parameter with an `allowed_domains` array.
- * Omit the HTTP/HTTPS prefix (e.g. "wikipedia.org" not "https://wikipedia.org").
+ * Define the search_wikipedia function tool.
+ * Chat Completions tool shape: { type: 'function', function: { name, description, parameters } }
  */
-const tools: OpenAI.Responses.Tool[] = [
+const tools: OpenAI.Chat.ChatCompletionTool[] = [
   {
-    type: 'web_search',
-    // Filter so the model only searches wikipedia.org
-    // See: https://platform.openai.com/docs/guides/tools-web-search#domain-filtering
-    filters: {
-      allowed_domains: ['wikipedia.org'],
+    type: 'function',
+    function: {
+      name: 'search_wikipedia',
+      description: 'Search Wikipedia for a topic and return the top matching article snippets.',
+      parameters: {
+        type: 'object',
+        properties: {
+          query: {
+            type: 'string',
+            description: 'The search query, e.g. "Eiffel Tower" or "Mixtral 8x7B"',
+          },
+        },
+        required: ['query'],
+        additionalProperties: false,
+      },
     },
   },
 ]
 
+/**
+ * Search Wikipedia using its free, keyless search API.
+ * `origin=*` enables CORS so this can be called directly from the browser.
+ * See: https://www.mediawiki.org/wiki/API:Search
+ *
+ * @param query - The search query
+ * @returns Array of { title, snippet, url } results
+ */
+async function searchWikipedia(query: string) {
+  const url = `https://en.wikipedia.org/w/api.php?action=query&list=search&format=json&origin=*&srlimit=3&srsearch=${encodeURIComponent(query)}`
+
+  const res = await fetch(url)
+  const data = await res.json()
+
+  const results = data?.query?.search ?? []
+  if (results.length === 0) {
+    return { error: `No Wikipedia results found for "${query}"` }
+  }
+
+  return {
+    query,
+    results: results.map((r: { title: string; snippet: string }) => ({
+      title: r.title,
+      // Strip the <span class="searchmatch"> highlighting markup from snippets
+      snippet: r.snippet.replace(/<\/?span[^>]*>/g, ''),
+      url: `https://en.wikipedia.org/wiki/${encodeURIComponent(r.title.replace(/ /g, '_'))}`,
+    })),
+  }
+}
+
 export default function Lesson04Responses() {
   const [messages, setMessages] = useState<Message[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const { traceSteps, trace, clearTrace } = useTrace()
-  const [apiKey, setApiKey] = useState<string | null>(
-    import.meta.env.VITE_OPENAI_API_KEY || localStorage.getItem('openai_api_key') || null
-  )
+  const { traceSteps, trace, pushTrace, clearTrace } = useTrace()
 
   async function handleSend(input: string) {
-    if (!apiKey) return
-
     setIsLoading(true)
 
     try {
@@ -67,58 +103,107 @@ export default function Lesson04Responses() {
       const newMessages = [...messages, userMessage]
       setMessages(newMessages)
 
-      // Initialize OpenAI client with API key
+      // Initialize OpenAI client pointed at the local Ollama server
       const client = new OpenAI({
-        apiKey: apiKey,
+        baseURL: 'http://127.0.0.1:11434/v1',
+        apiKey: 'ollama',
         dangerouslyAllowBrowser: true, // Note: In production, use a backend proxy
       })
 
-      const done = trace('web-search-request', 'Sending request with possible `web_search` tool', { model: 'gpt-5', messageCount: newMessages.length })
+      pushTrace({
+        id: 'initial-request',
+        label: 'Sending request to model',
+        status: 'in-progress',
+        timestamp: Date.now(),
+        data: { model: MODEL, messageCount: newMessages.length },
+      })
 
-      /**
-       * Make the request with the web_search built-in tool.
-       * See: https://platform.openai.com/docs/guides/tools-web-search
-       *
-       * KEY DIFFERENCE: Unlike function tools (Lessons 01-03), the model
-       * executes the web search on its own — there is no multi-step
-       * back-and-forth loop. We send one request and receive the final
-       * response (which may include a `web_search_call` output item
-       * alongside the assistant message).
-       */
-      const response = await client.responses.create({
-        model: 'gpt-5',
-        tools,
-        instructions:
-          'Use the web_search tool only when the user asks about general knowledge or current events. ' +
-          'For casual conversation or opinions, respond without searching.',
-        input: newMessages.map((msg) => ({
+      const chatMessages: OpenAI.Chat.ChatCompletionMessageParam[] = [
+        { role: 'system', content: SYSTEM_PROMPT },
+        ...newMessages.map((msg) => ({
           role: msg.role as 'user' | 'assistant',
           content: msg.content,
         })),
+      ]
+
+      let completion = await client.chat.completions.create({
+        model: MODEL,
+        tools,
+        messages: chatMessages,
       })
 
-      /**
-       * The response output may include:
-       * - A `web_search_call` item (with search action details)
-       * - A `message` item with text and url_citation annotations
-       * See: https://platform.openai.com/docs/guides/tools-web-search#output-and-citations
-       */
-      const webSearchCalls = response.output.filter(
-        (item) => item.type === 'web_search_call'
+      const toolCalls = (completion.choices[0].message.tool_calls ?? []).filter(
+        (tc): tc is OpenAI.Chat.ChatCompletionMessageFunctionToolCall => tc.type === 'function'
       )
 
-      if (webSearchCalls.length > 0) {
-        done('Web search completed by model', webSearchCalls)
+      // Response items tagged `web_search_call` so the UI (ChatArea's
+      // "tools used" detection) recognizes this as a search, like the original lesson.
+      const responseOutputItems: any[] = []
+
+      if (toolCalls.length === 0) {
+        pushTrace({
+          id: 'initial-request',
+          label: 'Model responded (no web search)',
+          status: 'completed',
+          timestamp: Date.now(),
+          data: completion.choices,
+        })
       } else {
-        done('Model responded (no web search)', response.output)
+        pushTrace({
+          id: 'initial-request',
+          label: 'Model requested a Wikipedia search',
+          status: 'completed',
+          timestamp: Date.now(),
+          data: toolCalls.map((tc) => ({
+            name: tc.function.name,
+            call_id: tc.id,
+            arguments: JSON.parse(tc.function.arguments),
+          })),
+        })
+
+        chatMessages.push(completion.choices[0].message)
+
+        for (const toolCall of toolCalls) {
+          const functionArgs = JSON.parse(toolCall.function.arguments)
+          const execTraceId = `exec-${toolCall.id}`
+
+          const execDone = trace(execTraceId, 'Searching Wikipedia…', { query: functionArgs.query })
+
+          const result = await searchWikipedia(functionArgs.query)
+
+          execDone('Web search completed', { query: functionArgs.query, result })
+
+          responseOutputItems.push({
+            type: 'web_search_call',
+            call_id: toolCall.id,
+            query: functionArgs.query,
+            result,
+          })
+
+          chatMessages.push({
+            role: 'tool',
+            tool_call_id: toolCall.id,
+            content: JSON.stringify(result),
+          })
+        }
+
+        const secondDone = trace('second-request', 'Sending search results to model', { messageCount: chatMessages.length })
+
+        completion = await client.chat.completions.create({
+          model: MODEL,
+          tools,
+          messages: chatMessages,
+        })
+
+        secondDone('Final response received', completion.choices)
       }
 
       // Extract assistant response and store full response object
       const assistantMessage: Message = {
         role: 'assistant',
-        content: response.output_text || 'No response',
-        responseOutput: response.output,
-        rawResponse: response,
+        content: completion.choices[0].message.content || 'No response',
+        responseOutput: responseOutputItems,
+        rawResponse: completion,
       }
 
       setMessages([...newMessages, assistantMessage])
@@ -141,15 +226,6 @@ export default function Lesson04Responses() {
     clearTrace()
   }
 
-  if (!apiKey) {
-    return (
-      <div className="container mx-auto max-w-2xl py-8 px-4">
-        <h1 className="text-2xl font-bold mb-4">Lesson 04: Web Search (Built-in Tool)</h1>
-        <ApiKeyConfig onKeyValidated={setApiKey} />
-      </div>
-    )
-  }
-
   // Get the latest assistant message with response data
   const latestAssistantMessage = messages
     .slice()
@@ -159,7 +235,7 @@ export default function Lesson04Responses() {
   return (
     <PageLayout
       title="Web Search"
-      subtitle="Built-in web_search tool (wikipedia.org only)"
+      subtitle="Local search_wikipedia function tool (wikipedia.org only)"
       chatContent={
         <ChatArea messages={messages} isLoading={isLoading} onSend={handleSend} />
       }
