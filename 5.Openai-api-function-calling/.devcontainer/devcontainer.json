@@ -1,0 +1,32 @@
+{
+  "customizations": {
+    "codespaces": {
+      "openFiles": [
+        "README.md"
+      ]
+    },
+    "vscode": {
+      // Set *default* container specific settings.json values on container create.
+      "settings": {
+        "terminal.integrated.profiles.linux": {
+          "zsh (login)": {
+            "path": "zsh",
+            "args": [
+              "-l"
+            ]
+          }
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh (login)"
+      },
+      // Add the IDs of extensions you want installed when the container is created.
+      "extensions": [
+        "linkedinlearning.linkedinlearning-vscode-theme"
+      ]
+    }
+  },
+  // Pull all branches
+  "postAttachCommand": "git pull --all",
+  // Install Playwright CLI globally (required for SKILLS.md)
+  "postCreateCommand": "npm install -g @playwright/cli@latest && npm install"
+}
+// DevContainer Reference: https://code.visualstudio.com/docs/remote/devcontainerjson-reference
