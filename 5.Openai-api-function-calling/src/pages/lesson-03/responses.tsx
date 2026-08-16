@@ -23,6 +23,15 @@ import { InspectorPanels } from '@/components/InspectorPanels'
 import { useTrace } from '@/hooks/useTrace'
 import type { Message } from '@/types/chat'
 
+// Chaining sequential tool calls (geocode -> weather) is unreliable on
+// local models this size: llama3.1:8b sometimes narrates the second call
+// as text instead of invoking it (visible failure). mistral-nemo:12b was
+// tried as a fix but was worse — it silently skipped the second tool call
+// and fabricated plausible-looking weather data instead (invisible
+// failure). Sticking with llama3.1:8b for consistency with the rest of
+// the app; this is a known limitation of small local models, not a bug
+// in the tool-calling loop below (each tool call, once made, executes
+// and returns real data correctly).
 const MODEL = 'llama3.1:8b'
 
 const SYSTEM_PROMPT =
@@ -32,7 +41,9 @@ const SYSTEM_PROMPT =
   then use get_current_weather with those coordinates.
   When the user only asks about a location or coordinates, use geocode_location alone.
   If you already have weather data in your context for the location in question, use that directly without calling the tool again.
-  Always call the appropriate tool(s) before providing your response.`
+  Always call the appropriate tool(s) before providing your response.
+  Never write out a tool call as text in your reply — always invoke tools through the tool-calling mechanism, never describe or narrate what you are about to call.
+  Only pass numeric latitude/longitude values you received from a previous geocode_location result — never a placeholder or description.`
 
 /**
  * Define the function tools available to the model.
@@ -128,7 +139,17 @@ async function geocodeLocation(location: string) {
  * @returns Object with temperature, humidity, description, and other weather data
  */
 async function getCurrentWeather(latitude: number, longitude: number) {
-  const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`
+  // Local models occasionally hallucinate a placeholder string instead of
+  // substituting the actual numbers from a prior tool result (e.g.
+  // "[ latitude of geocoding response for \"Tokyo\" ]"). Reject that before
+  // it becomes a malformed request that Open-Meteo will 403.
+  const lat = Number(latitude)
+  const lon = Number(longitude)
+  if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) {
+    return { error: 'invalid_coordinates', latitude_received: latitude, longitude_received: longitude }
+  }
+
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m`
 
   try {
     const res = await fetch(url)
@@ -152,8 +173,8 @@ async function getCurrentWeather(latitude: number, longitude: number) {
 
     const current = data.current
     return {
-      latitude,
-      longitude,
+      latitude: lat,
+      longitude: lon,
       temperature_celsius: current?.temperature_2m,
       feels_like_celsius: current?.apparent_temperature,
       humidity_percent: current?.relative_humidity_2m,
@@ -296,7 +317,11 @@ export default function Lesson03Responses() {
             result = await geocodeLocation(functionArgs.location)
           } else if (functionName === 'get_current_weather') {
             console.log('Executing get_current_weather with args:', functionArgs)
-            result = await getCurrentWeather(functionArgs.latitude, functionArgs.longitude)
+            // Local models sometimes abbreviate latitude/longitude to lat/lon/lng
+            // even though the tool schema spells them out — accept both.
+            const latitude = functionArgs.latitude ?? functionArgs.lat
+            const longitude = functionArgs.longitude ?? functionArgs.lon ?? functionArgs.lng
+            result = await getCurrentWeather(latitude, longitude)
           }
 
           // --- Trace: function completed ---
