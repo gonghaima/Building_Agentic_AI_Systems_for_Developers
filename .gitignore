@@ -52,3 +52,6 @@ pnpm-debug.log*
 .chroma/
 *.faiss
 Ex_Files_Build_Agents_LangChain.zip
+
+# LinkedIn Learning exercise-file clones (license: internal use only, non-transferable)
+agentic-applications-with-llamaindex-and-mcp-4077221/
