@@ -1,0 +1,11 @@
+{"ts": "2026-01-21T14:38:46.022783+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "run_started", "lesson": "lesson3"}
+{"ts": "2026-01-21T14:38:46.023822+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "inventory_loaded", "inventory_path": "01_03-e/inventory/agent_inventory.json", "agent_count": 2}
+{"ts": "2026-01-21T14:38:46.024663+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "agent_run_started", "agent_name": "Shopping Assistant Agent", "created_at": "2026-01-21T14:38:46.024648+00:00"}
+{"ts": "2026-01-21T14:38:47.615844+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "tool_invoked", "tool_name": "read_local_text", "tool_args": {"path": "01_03-e/data/shopping_notes.txt"}}
+{"ts": "2026-01-21T14:38:47.617466+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "tool_completed", "tool_name": "read_local_text", "status": "ok", "output_chars": 980}
+{"ts": "2026-01-21T14:38:52.138322+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "tool_invoked", "tool_name": "write_local_json", "tool_args": {"path": "01_03-e/out/shopping_summary.json"}}
+{"ts": "2026-01-21T14:38:52.138725+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "tool_completed", "tool_name": "write_local_json", "status": "ok", "output_path": "01_03-e/out/shopping_summary.json"}
+{"ts": "2026-01-21T14:38:56.669787+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "agent_run_completed", "agent_name": "Shopping Assistant Agent", "status": "ok"}
+{"ts": "2026-01-21T14:38:56.670085+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "agent_run_started", "agent_name": "Research Assistant Agent"}
+{"ts": "2026-01-21T14:39:04.546248+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "agent_run_completed", "agent_name": "Research Assistant Agent", "status": "ok"}
+{"ts": "2026-01-21T14:39:04.546619+00:00", "run_id": "526306bd-c12a-4dd4-9ba7-27304633436f", "event_type": "run_completed", "lesson": "lesson3", "status": "ok", "event_counts": {"run_started": 1, "inventory_loaded": 1, "agent_run_started": 2, "tool_invoked": 2, "tool_completed": 2, "agent_run_completed": 2}}

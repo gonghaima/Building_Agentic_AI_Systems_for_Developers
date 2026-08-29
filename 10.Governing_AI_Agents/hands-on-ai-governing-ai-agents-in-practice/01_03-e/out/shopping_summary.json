@@ -1,0 +1,25 @@
+{
+  "input_file": "01_03-e/data/shopping_notes.txt",
+  "budget": "$180 total",
+  "key_needs": [
+    "Chicken breast (2 lbs) or turkey if cheaper",
+    "Fresh spinach (2 bags)",
+    "Cherry tomatoes",
+    "Avocados (4)",
+    "Brown rice (1 bag)",
+    "Olive oil (small bottle)",
+    "Greek yogurt (dairy-free; avoid cow\u2019s milk)",
+    "Almond milk (unsweetened)",
+    "Black beans (4 cans)",
+    "Chickpeas (2 cans)",
+    "Salsa (medium)",
+    "Oats (1 container)",
+    "Paper towels",
+    "Dish soap",
+    "Trash bags (kitchen size)",
+    "Preferences: avoid artificial fragrances; prefer eco-friendly packaging; avoid shellfish, beef, pork, soy/tofu, cow\u2019s milk"
+  ],
+  "summary": "Weekly household order for the Williams household with a $180 total budget. Must-haves include poultry (2 lbs chicken breast or turkey if cheaper), produce (spinach, cherry tomatoes, 4 avocados), staples (brown rice, olive oil, dairy-free Greek yogurt, unsweetened almond milk), pantry items (black beans, chickpeas, medium salsa, oats), and household supplies (paper towels, dish soap, kitchen trash bags). Preferences: avoid artificial fragrances; prefer eco-friendly packaging; avoid shellfish, beef, pork, soy/tofu, and cow\u2019s milk. Substitution questions: email kesha.williams@example.com.",
+  "output_file": "01_03-e/out/shopping_summary.json",
+  "created_at": "2026-01-21T14:38:46.024648+00:00"
+}

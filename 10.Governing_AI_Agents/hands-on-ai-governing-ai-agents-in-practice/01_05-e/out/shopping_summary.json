@@ -1,0 +1,26 @@
+{
+  "input_file": "01_05-e/data/shopping_notes.txt",
+  "budget": "$120",
+  "key_needs": [
+    "Chicken breast (2 lbs) or turkey if cheaper",
+    "Fresh spinach (2 bags)",
+    "Cherry tomatoes",
+    "Avocados (4)",
+    "Brown rice (1 bag)",
+    "Olive oil (small bottle)",
+    "Greek yogurt (dairy-free; no cow\u2019s milk)",
+    "Almond milk (unsweetened)",
+    "Black beans (4 cans)",
+    "Chickpeas (2 cans)",
+    "Salsa (medium)",
+    "Oats (1 container)",
+    "Paper towels",
+    "Dish soap",
+    "Trash bags (kitchen size)",
+    "Avoid: shellfish, beef, pork, soy/tofu, cow\u2019s milk",
+    "Prioritize essentials; flag if total may exceed budget"
+  ],
+  "summary": "Budget is $120. Shopping is for a small dinner plus weekly basics; prioritize essentials first. Must-haves: 2 lbs chicken breast (or turkey if cheaper), fresh spinach (2 bags), cherry tomatoes, 4 avocados, 1 bag brown rice, small bottle olive oil, dairy-free (no cow\u2019s milk) \u201cGreek\u201d yogurt alternative, and unsweetened almond milk. Pantry/staples: 4 cans black beans, 2 cans chickpeas, medium salsa, and 1 container oats. Household: paper towels, dish soap, and kitchen-size trash bags. Dietary constraints: avoid shellfish, beef, pork, soy/tofu, and cow\u2019s milk. If the running total appears to exceed $120, call it out.",
+  "output_file": "01_05-e/out/shopping_summary.json",
+  "created_at": "2026-01-21T14:43:00.144593+00:00"
+}
