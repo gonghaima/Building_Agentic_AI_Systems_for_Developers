@@ -54,3 +54,6 @@ pnpm-debug.log*
 Ex_Files_Build_Agents_LangChain.zip
 
 agentic-applications-with-llamaindex-and-mcp-4077221/
+
+# Stray dangling gitlink cleaned up from history; keep out if it reappears
+/hands-on-ai-governing-ai-agents-in-practice/
